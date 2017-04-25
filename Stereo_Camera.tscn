@@ -1,6 +1,119 @@
-[gd_scene load_steps=2 format=1]
+[gd_scene load_steps=7 format=1]
 
 [ext_resource path="res://Stereo_Camera.gd" type="Script" id=1]
+[ext_resource path="res://white_dot.png" type="Texture" id=2]
+
+[sub_resource type="CanvasItemShader" id=1]
+
+_code = {
+"fragment": "// Distortion shader for our left eye
+
+uniform float lcd_width = 10.5;
+uniform float iod = 6.5;
+uniform float k1 = 0.01;
+uniform float k2 = 0.01;
+uniform float upscale = 1.0;
+uniform float aspect_ratio = 667.0 / 750.0;
+
+vec2 coords = (UV * vec2(2.0)) - vec2(1.0);
+vec2 eye_center = vec2(((-iod / 2.0) + (lcd_width / 4.0)) / (lcd_width / 2.0), 0.0);
+vec2 offset = coords - eye_center;
+
+// take aspect ratio into account
+offset.y /= aspect_ratio;
+
+// distort 
+vec2 offset_sq = offset * offset;
+float radius_sq = offset_sq.x + offset_sq.y;
+float radius_s4 = radius_sq * radius_sq;
+float distortion_scale = 1.0 + (k1 * radius_sq) + (k2 * radius_s4);
+offset *= distortion_scale;
+
+// reapply aspect ratio
+offset.y *= aspect_ratio;
+
+// add our eye center back in
+coords = offset + eye_center;
+coords /= upscale;
+if (coords.x < -1.0 || coords.y < -1.0 || coords.x > 1.0 || coords.y > 1.0) {
+	COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+} else {
+	coords = (coords + vec2(1.0)) / vec2(2.0);
+	COLOR = tex(TEXTURE, coords);
+};",
+"fragment_ofs": 0,
+"light": "",
+"light_ofs": 0,
+"vertex": "",
+"vertex_ofs": 0
+}
+
+[sub_resource type="CanvasItemMaterial" id=2]
+
+shader/shader = SubResource( 1 )
+shader/shading_mode = 1
+shader_param/lcd_width = 10.5
+shader_param/iod = 6.5
+shader_param/k1 = 0.01
+shader_param/k2 = 0.01
+shader_param/upscale = 1.0
+shader_param/aspect_ratio = 0.889333
+
+[sub_resource type="CanvasItemShader" id=3]
+
+_code = {
+"fragment": "// Distortion shader for our right eye
+
+uniform float lcd_width = 10.5;
+uniform float iod = 6.5;
+uniform float k1 = 0.01;
+uniform float k2 = 0.01;
+uniform float upscale = 1.0;
+uniform float aspect_ratio = 667.0 / 750.0;
+
+vec2 coords = (UV * vec2(2.0)) - vec2(1.0);
+vec2 eye_center = vec2(((iod / 2.0) - (lcd_width / 4.0)) / (lcd_width / 2.0), 0.0);
+vec2 offset = coords - eye_center;
+
+// take aspect ratio into account
+offset.y /= aspect_ratio;
+
+// distort 
+vec2 offset_sq = offset * offset;
+float radius_sq = offset_sq.x + offset_sq.y;
+float radius_s4 = radius_sq * radius_sq;
+float distortion_scale = 1.0 + (k1 * radius_sq) + (k2 * radius_s4);
+offset *= distortion_scale;
+
+// reapply aspect ratio
+offset.y *= aspect_ratio;
+
+// add our eye center back in
+coords = offset + eye_center;
+coords /= upscale;
+if (coords.x < -1.0 || coords.y < -1.0 || coords.x > 1.0 || coords.y > 1.0) {
+	COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+} else {
+	coords = (coords + vec2(1.0)) / vec2(2.0);
+	COLOR = tex(TEXTURE, coords);
+};",
+"fragment_ofs": 0,
+"light": "",
+"light_ofs": 0,
+"vertex": "",
+"vertex_ofs": 0
+}
+
+[sub_resource type="CanvasItemMaterial" id=4]
+
+shader/shader = SubResource( 3 )
+shader/shading_mode = 1
+shader_param/lcd_width = 10.5
+shader_param/iod = 6.5
+shader_param/k1 = 0.01
+shader_param/k2 = 0.01
+shader_param/upscale = 1.0
+shader_param/aspect_ratio = 0.889333
 
 [node name="Stereo_Camera" type="Spatial"]
 
@@ -9,6 +122,9 @@ script/script = ExtResource( 1 )
 iod = 6.5
 lcd_width = 10.5
 lcd_lens = 4.0
+k1 = 0.01
+k2 = 0.01
+upscale = 1.0
 near = 0.1
 far = 100.0
 world_scale = 100.0
@@ -95,13 +211,22 @@ v_offset = 0.0
 
 [node name="ViewportSprite_Left" type="ViewportSprite" parent="."]
 
+material/material = SubResource( 2 )
 viewport = NodePath("../Viewport_Left")
 centered = false
 
 [node name="ViewportSprite_Right" type="ViewportSprite" parent="."]
 
+material/material = SubResource( 4 )
 transform/pos = Vector2( 400, 0 )
 viewport = NodePath("../Viewport_Right")
+centered = false
+
+[node name="Divider" type="Sprite" parent="."]
+
+transform/pos = Vector2( 400, 0 )
+transform/scale = Vector2( 2, 600 )
+texture = ExtResource( 2 )
 centered = false
 
 
