@@ -1,0 +1,107 @@
+[gd_scene load_steps=2 format=1]
+
+[ext_resource path="res://Stereo_Camera.gd" type="Script" id=1]
+
+[node name="Stereo_Camera" type="Spatial"]
+
+_import_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+script/script = ExtResource( 1 )
+iod = 6.5
+lcd_width = 10.5
+lcd_lens = 4.0
+near = 0.1
+far = 100.0
+world_scale = 100.0
+
+[node name="Left_Eye_Pos" type="Spatial" parent="."]
+
+_import_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+transform/local = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.035, 0, 0 )
+
+[node name="Right_Eye_Pos" type="Spatial" parent="."]
+
+_import_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+transform/local = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.035, 0, 0 )
+
+[node name="Viewport_Left" type="Viewport" parent="."]
+
+rect = Rect2( 0, 0, 400, 600 )
+own_world = false
+world = null
+transparent_bg = false
+render_target/enabled = true
+render_target/v_flip = false
+render_target/clear_on_new_frame = true
+render_target/filter = false
+render_target/gen_mipmaps = false
+render_target/update_mode = 2
+audio_listener/enable_2d = false
+audio_listener/enable_3d = false
+physics/object_picking = false
+gui/disable_input = false
+
+[node name="Left_Eye" type="Camera" parent="Viewport_Left"]
+
+_import_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+transform/local = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.035, 0, 0 )
+projection = 2
+left = -0.5
+right = 0.5
+top = 0.5
+bottom = -0.5
+near = 0.1
+far = 100.0
+keep_aspect = 0
+current = true
+visible_layers = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+
+[node name="Viewport_Right" type="Viewport" parent="."]
+
+rect = Rect2( 0, 0, 400, 600 )
+own_world = false
+world = null
+transparent_bg = false
+render_target/enabled = true
+render_target/v_flip = false
+render_target/clear_on_new_frame = true
+render_target/filter = false
+render_target/gen_mipmaps = false
+render_target/update_mode = 2
+audio_listener/enable_2d = false
+audio_listener/enable_3d = false
+physics/object_picking = false
+gui/disable_input = false
+
+[node name="Right_Eye" type="Camera" parent="Viewport_Right"]
+
+_import_transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+transform/local = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.035, 0, 0 )
+projection = 2
+left = -0.5
+right = 0.5
+top = 0.5
+bottom = -0.5
+near = 0.1
+far = 100.0
+keep_aspect = 0
+current = true
+visible_layers = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+
+[node name="ViewportSprite_Left" type="ViewportSprite" parent="."]
+
+viewport = NodePath("../Viewport_Left")
+centered = false
+
+[node name="ViewportSprite_Right" type="ViewportSprite" parent="."]
+
+transform/pos = Vector2( 400, 0 )
+viewport = NodePath("../Viewport_Right")
+centered = false
+
+
