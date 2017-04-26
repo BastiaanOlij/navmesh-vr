@@ -39,6 +39,11 @@ func update_cam():
 	f1 += add_width
 	f2 += add_width
 	
+	# Temporary workaround, as we're only applying our upscale to our width 
+	# our aspect ratio of our viewport changes. Upscale f3 a second time
+	# to compensate for that change.
+	f3 *= upscale
+	
 	left_eye.set_frustum(-f2, f1, f3, -f3, near, far)
 	right_eye.set_frustum(-f1, f2, f3, -f3, near, far)
 	
