@@ -15,6 +15,10 @@ var draw_path = false
 
 
 func _process(delta):
+	var tform = get_node("Stereo_Camera").get_transform()
+	tform.basis = get_node("/root/orientation").get_orientation()
+	get_node("Stereo_Camera").set_transform(tform)
+	
 	if (path.size() > 1):
 		var to_walk = delta*SPEED
 		var to_watch = Vector3(0, 1, 0)
@@ -41,16 +45,12 @@ func _process(delta):
 		
 		if (path.size() < 2):
 			path = []
-			set_process(false)
-	else:
-		set_process(false)
 
 
 func _update_path():
 	var p = get_simple_path(begin, end, true)
 	path = Array(p) # Vector3array too complex to use, convert to regular array
 	path.invert()
-	set_process(true)
 
 	if (draw_path):
 		var im = get_node("draw")
@@ -86,6 +86,7 @@ func _input(event):
 
 func _ready():
 	set_process_input(true)
+	set_process(true)
 	m.set_line_width(3)
 	m.set_point_size(3)
 	m.set_fixed_flag(FixedMaterial.FLAG_USE_POINT_SIZE, true)
@@ -93,3 +94,11 @@ func _ready():
 	#begin = get_closest_point(get_node("start").get_translation())
 	#end = get_closest_point(get_node("end").get_translation())
 	#call_deferred("_update_path")
+	
+	var tform = get_node("Stereo_Camera").get_transform()
+	tform.looking_at(Vector3(0.0, tform.origin.y, 0.0), Vector3(0.0, 1.0, 0.0))
+	get_node("/root/orientation").set_null_orientation(tform.basis)
+
+
+func _on_Reset_Reference_Frame_Btn_pressed():
+	get_node("/root/orientation").request_new_reference_frame()
