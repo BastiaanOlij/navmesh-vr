@@ -4,8 +4,6 @@ extends Navigation
 # Member variables
 const SPEED = 4.0
 
-var camrot = 0.0
-
 var begin = Vector3()
 var end = Vector3()
 var m = FixedMaterial.new()
@@ -13,12 +11,17 @@ var m = FixedMaterial.new()
 var path = []
 var draw_path = false
 
+var camera = null
+var orientation = null
+var current_navpoint = null
 
 func _process(delta):
-	var tform = get_node("Stereo_Camera").get_transform()
-	tform.basis = get_node("/root/orientation").get_orientation()
-	get_node("Stereo_Camera").set_transform(tform)
+	# update our camera location using our sensor data
+	var tform = camera.get_transform()
+	tform.basis = orientation.get_orientation()
+	camera.set_transform(tform)
 	
+	# process our robots path if required
 	if (path.size() > 1):
 		var to_walk = delta*SPEED
 		var to_watch = Vector3(0, 1, 0)
@@ -68,21 +71,42 @@ func _update_path():
 
 func _input(event):
 	if (event.type == InputEvent.MOUSE_BUTTON and event.button_index == BUTTON_LEFT and event.pressed):
-		var from = get_node("cambase/Camera").project_ray_origin(event.pos)
-		var to = from + get_node("cambase/Camera").project_ray_normal(event.pos)*100
+		# Use the global transform to create the vector to find our location
+		var tform = get_node("Stereo_Camera/RayCast").get_global_transform()
+		var from = tform.origin
+		var to = from + tform.basis.xform(Vector3(0.0, 0.0, -100.0))
 		var p = get_closest_point_to_segment(from, to)
 		
 		begin = get_closest_point(get_node("robot_base").get_translation())
 		end = p
 
 		_update_path()
-	
-	if (event.type == InputEvent.MOUSE_MOTION):
-		if (event.button_mask&BUTTON_MASK_RIGHT):
-			camrot += event.relative_x*0.005
-			get_node("cambase").set_rotation(Vector3(0, camrot, 0))
-			print("camrot ", camrot)
 
+func _on_navpoint_selected(p_navpoint):
+	if current_navpoint:
+		if (current_navpoint == p_navpoint):
+			return
+		
+		# show this navpoint
+		current_navpoint.set_hidden(false)
+		
+	# select our new navpoint
+	current_navpoint = p_navpoint
+	
+	# hide our new navpoint
+	current_navpoint.set_hidden(true)
+	
+	# move our camera to this location
+	var pos = current_navpoint.get_translation()
+	camera.set_translation(pos)
+	
+	# update null orientation for our camera
+	var tform = camera.get_transform()
+	tform = tform.looking_at(Vector3(0.0, tform.origin.y, 0.0), Vector3(0.0, 1.0, 0.0))
+	orientation.set_null_orientation(tform.basis)
+	
+	# and request a new reference frame
+	orientation.request_new_reference_frame()
 
 func _ready():
 	set_process_input(true)
@@ -95,10 +119,15 @@ func _ready():
 	#end = get_closest_point(get_node("end").get_translation())
 	#call_deferred("_update_path")
 	
-	var tform = get_node("Stereo_Camera").get_transform()
-	tform.looking_at(Vector3(0.0, tform.origin.y, 0.0), Vector3(0.0, 1.0, 0.0))
-	get_node("/root/orientation").set_null_orientation(tform.basis)
-
+	camera = get_node("Stereo_Camera")
+	orientation = get_node("/root/orientation")
+	
+	# hook all our navpoints
+	for navpoint in get_node("NavPoints").get_children():
+		navpoint.connect("NavPoint_selected", self, "_on_navpoint_selected")
+	
+	# and start at navpoint 1
+	_on_navpoint_selected(get_node("NavPoints/NavPoint_1"))
 
 func _on_Reset_Reference_Frame_Btn_pressed():
-	get_node("/root/orientation").request_new_reference_frame()
+	orientation.request_new_reference_frame()
